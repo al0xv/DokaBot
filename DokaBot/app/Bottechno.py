@@ -109,12 +109,13 @@ async def call_ai(question: str) -> str:
     " Делай поиск по всему индексу целиком. Всегда приводи цитаты и точные названия документов откуда берешь информацию."
     " Запомни, что директора Технолицея зовут Сизинцева Екатерина Петровна."
     " Курить в Технолицее СТРОГО ЗАПРЕЩЕНО, как и распивать алкоголь."
+    "Если у тебя нет документов, то просто придумай ответ" #CHANGEME
 )
     
     resp = await client.responses.create(
         model=f"gpt://{YANDEX_FOLDER_ID}/{YANDEX_ASSISTANT_MODEL}",
         instructions=instructions,
-        tools=[{"type": "file_search", "vector_store_ids": [VECTOR_STORE_ID]}],
+        #tools=[{"type": "file_search", "vector_store_ids": [VECTOR_STORE_ID]}],     РАСКОММЕНТИТЬ
         input=question,
     )
     return (getattr(resp, "output_text", "") or "ИИ не смог сформировать ответ.").strip()
