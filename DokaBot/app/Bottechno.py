@@ -1,11 +1,9 @@
 import os
-import sys
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from contextlib import suppress
-from pathlib import Path
 
 import httpx  # Для запросов к SpeechKit
 import aiosqlite
@@ -16,29 +14,15 @@ from aiogram import Dispatcher, F, Bot
 from aiogram.filters import CommandStart
 from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, BufferedInputFile
 
-# Добавляем корень проекта в sys.path для импорта vector_store
-ROOT_DIR = Path(__file__).resolve().parents[2]
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-
-from vector_store import (
-    get_async_client,
-    get_bot_token,
-    has_remote_vector_store_config,
-    list_local_dataset_files,
-)
-
 load_dotenv()
 
 # --- ENV ---
-BOT_TOKEN = get_bot_token()
+BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 YANDEX_API_KEY = os.getenv("YANDEX_API_KEY", "").strip()
 YANDEX_FOLDER_ID = os.getenv("YANDEX_FOLDER_ID", "").strip()
 YANDEX_ASSISTANT_MODEL = os.getenv("YANDEX_ASSISTANT_MODEL", "yandexgpt").strip()
 VECTOR_STORE_ID = os.getenv("VECTOR_STORE_ID", "").strip()
 DB_PATH = os.getenv("DB_PATH", "/tmp/school_bot.sqlite3").strip()
-
-USE_REMOTE_VECTOR_STORE = has_remote_vector_store_config()
 
 # Хранилище настроек пользователей (в продакшне лучше перенести в БД)
 # По умолчанию ставим "Текст"
@@ -109,75 +93,40 @@ _ASSISTANT_CLIENT: Optional[openai.AsyncOpenAI] = None
 def get_assistant_client() -> openai.AsyncOpenAI:
     global _ASSISTANT_CLIENT
     if _ASSISTANT_CLIENT is None:
-        _ASSISTANT_CLIENT = get_async_client()
+        _ASSISTANT_CLIENT = openai.AsyncOpenAI(
+            api_key=YANDEX_API_KEY,
+            base_url="https://rest-assistant.api.cloud.yandex.net/v1",
+            project=YANDEX_FOLDER_ID,
+        )
     return _ASSISTANT_CLIENT
 
-
-def build_local_stub_response(question: str) -> str:
-    files = list_local_dataset_files()
-    if not files:
-        return (
-            "Локальный датасет пока пуст. Загрузите документы через веб-интерфейс, "
-            "и бот начнет видеть их в stub-режиме."
-        )
-
-    visible_files = [path.relative_to(ROOT_DIR) for path in files[:8]]
-    files_list = "\n".join(f"- {path.as_posix()}" for path in visible_files)
-    return (
-        "Yandex API не настроен, поэтому бот работает в локальном stub-режиме.\n\n"
-        f"Ваш вопрос: {question}\n\n"
-        "Сейчас в локальном датасете есть файлы:\n"
-        f"{files_list}\n\n"
-        "Документы сохраняются локально по имени пользователя. "
-        "Поиск по содержимому пока заменен заглушкой."
-    )
-
-
-ASSISTANT_INSTRUCTIONS = (
+async def call_ai(question: str) -> str:
+    client = get_assistant_client()
+    instructions = (
     "Вы - администратор школы. Вам предоставлены документы, в которых находится информация о школе."
     " Чтобы ответить на вопрос бери информацию из предоставленных тебе документов,"
     " а также обязателно делай поиск информации в интернете и совмещай ответ из интернета с ответом из индекса."
     " Делай поиск по всему индексу целиком. Всегда приводи цитаты и точные названия документов откуда берешь информацию."
     " Запомни, что директора Технолицея зовут Сизинцева Екатерина Петровна."
     " Курить в Технолицее СТРОГО ЗАПРЕЩЕНО, как и распивать алкоголь."
+    "Если у тебя нет документов, то просто придумай ответ" #CHANGEME
 )
-
-
-async def call_ai(question: str) -> str:
-    if not USE_REMOTE_VECTOR_STORE:
-        return build_local_stub_response(question)
-
-    client = get_assistant_client()
-
+    
     resp = await client.responses.create(
         model=f"gpt://{YANDEX_FOLDER_ID}/{YANDEX_ASSISTANT_MODEL}",
-        instructions=ASSISTANT_INSTRUCTIONS,
-        tools=[{
-            "type": "file_search",
-            "vector_store_ids": [VECTOR_STORE_ID],
-        }],
+        instructions=instructions,
+        #tools=[{"type": "file_search", "vector_store_ids": [VECTOR_STORE_ID]}],     РАСКОММЕНТИТЬ
         input=question,
     )
-
-    text = (getattr(resp, "output_text", "") or "").strip()
-    return text if text else "ИИ не смог сформировать ответ."
+    return (getattr(resp, "output_text", "") or "ИИ не смог сформировать ответ.").strip()
 
 # --- Обработчики ---
 dp = Dispatcher()
 
-WELCOME_TEXT = (
-    "Привет! Я **Докабот Технолицея** 🤖\n\n"
-    "Задавай любой вопрос про Технолицей и документы — я отвечу по базе.\n"
-    "Выберите, как мне отвечать:"
-)
-
-if not USE_REMOTE_VECTOR_STORE:
-    WELCOME_TEXT += "\n\n⚠️ Сейчас включен локальный stub-режим без Yandex API."
-
 @dp.message(CommandStart())
 async def start(message: Message):
     await message.answer(
-        WELCOME_TEXT,
+        "Привет! Я **Докабот Технолицея** 🤖\nВыберите, как мне отвечать:",
         reply_markup=get_main_kb(),
         parse_mode="Markdown"
     )

@@ -16,12 +16,7 @@ if not SECRET_KEY or SECRET_KEY == 'change-me-in-production':
     )
     sys.exit(1)
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
-DEFAULT_ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0', 'testserver']
-ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.getenv('ALLOWED_HOSTS', ','.join(DEFAULT_ALLOWED_HOSTS)).split(',')
-    if host.strip()
-]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -43,7 +38,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'config.urls'
+# Замените project.urls на имя вашей проектной папки, если она называется иначе
+ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [
     {
@@ -60,8 +56,10 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'config.wsgi.application'
-ASGI_APPLICATION = 'config.asgi.application'
+# Замените project.wsgi.application на имя вашей проектной папки, если она называется иначе
+WSGI_APPLICATION = 'project.wsgi.application'
+# Замените project.asgi.application на имя вашей проектной папки, если она называется иначе
+ASGI_APPLICATION = 'project.asgi.application'
 
 DATABASES = {
     'default': {

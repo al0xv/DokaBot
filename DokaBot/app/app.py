@@ -1,30 +1,16 @@
 import os
-import sys
 import logging
 import asyncio
-from pathlib import Path
 from aiohttp import web
 from aiogram import Bot
 from aiogram.types import Update
-from dotenv import load_dotenv
-
-ROOT_DIR = Path(__file__).resolve().parents[2]
-APP_DIR = Path(__file__).resolve().parent
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
-if str(APP_DIR) not in sys.path:
-    sys.path.insert(0, str(APP_DIR))
 
 from Bottechno import dp, init_db
-from vector_store import get_bot_token
-
-
-load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("webhook_app")
 
-BOT_TOKEN = get_bot_token()
+BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 WEBHOOK_PATH = "/webhook"
 
 if not BOT_TOKEN:
