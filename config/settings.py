@@ -1,9 +1,20 @@
 from pathlib import Path
 import os
+import sys
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'change-me-in-production')
+load_dotenv(BASE_DIR / '.env')
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY or SECRET_KEY == 'change-me-in-production':
+    print(
+        'ERROR: SECRET_KEY не установлен или использует значение по умолчанию.\n'
+        'Установите безопасный SECRET_KEY в .env файле.',
+        file=sys.stderr
+    )
+    sys.exit(1)
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 

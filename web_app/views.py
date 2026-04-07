@@ -3,9 +3,11 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from openai import OpenAIError
 
 from .forms import DocumentForm, SchoolRegisterForm
 from .models import Document
+from .services import remove_document_from_vector_store, sync_document_to_vector_store
 
 
 def register_view(request: HttpRequest) -> HttpResponse:
@@ -33,7 +35,15 @@ def upload_documents_view(request: HttpRequest) -> HttpResponse:
             document = form.save(commit=False)
             document.school = request.user
             document.save()
-            messages.success(request, 'Документ загружен.')
+            try:
+                document.vector_store_file_id = sync_document_to_vector_store(document)
+                document.save(update_fields=['vector_store_file_id'])
+            except (OSError, RuntimeError, OpenAIError) as exc:
+                document.file.delete(save=False)
+                document.delete()
+                messages.error(request, f'Документ не загружен в датасет: {exc}')
+            else:
+                messages.success(request, 'Документ загружен и добавлен в датасет.')
             return redirect('upload_documents')
     else:
         form = DocumentForm()
@@ -54,8 +64,12 @@ def delete_document_view(request: HttpRequest, document_id: int) -> HttpResponse
     document = get_object_or_404(Document, id=document_id, school=request.user)
 
     if request.method == 'POST':
-        document.file.delete(save=False)
-        document.delete()
-        messages.success(request, 'Документ удалён.')
+        try:
+            remove_document_from_vector_store(document)
+            document.file.delete(save=False)
+            document.delete()
+            messages.success(request, 'Документ удалён из сайта и датасета.')
+        except (OSError, RuntimeError, OpenAIError) as exc:
+            messages.error(request, f'Документ не удалён из датасета: {exc}')
 
     return redirect('upload_documents')

@@ -1,7 +1,7 @@
 import os
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from contextlib import suppress
 
@@ -83,7 +83,7 @@ async def db_log_qa(user_id: int, q: str, a: str) -> None:
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
             "INSERT INTO qa_logs(user_id, question, answer, created_at) VALUES(?, ?, ?, ?)",
-            (user_id, q, a, datetime.utcnow().isoformat()),
+            (user_id, q, a, datetime.now(timezone.utc).isoformat()),
         )
         await db.commit()
 
@@ -140,10 +140,27 @@ async def set_voice_mode(message: Message):
     user_preferences[message.from_user.id] = "voice"
     await message.answer("Режим изменен: буду дублировать ответы голосом.")
 
+# --- Rate limit ---
+_last_call: dict[int, datetime] = {}
+MIN_INTERVAL = timedelta(seconds=2)
+
+def rate_limited(user_id: int) -> bool:
+    now = datetime.now(timezone.utc)
+    last = _last_call.get(user_id)
+    if last and now - last < MIN_INTERVAL:
+        return True
+    _last_call[user_id] = now
+    return False
+
+
 @dp.message(F.text)
 async def handle_question(message: Message):
     q = message.text.strip()
     if not q or q in ["📝 Только текст", "🎙 Текст + Голос"]:
+        return
+
+    if rate_limited(message.from_user.id):
+        await message.answer("Подожди пару секунд перед следующим вопросом 🙂")
         return
 
     thinking_msg = await message.answer("Думаю…")
@@ -163,7 +180,9 @@ async def handle_question(message: Message):
                 voice_file = BufferedInputFile(voice_data, filename="answer.ogg")
                 await message.answer_voice(voice_file)
 
-    except Exception:
+    except BaseException as exc:
+        if isinstance(exc, asyncio.CancelledError):
+            raise
         logger.exception("AI/TTS error")
         await message.answer("Произошла ошибка. Попробуйте позже.")
     finally:

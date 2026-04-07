@@ -29,13 +29,18 @@ async def on_cleanup(app: web.Application):
 async def health(request: web.Request):
     return web.json_response({"ok": True})
 
+# Хранилище активных задач для предотвращения их GC
+_active_tasks: set = set()
+
 async def telegram_webhook(request: web.Request):
     # Telegram присылает Update JSON
     data = await request.json()
     update = Update.model_validate(data)
 
     # Главное: сразу ответить 200 OK, а обработку сделать async
-    asyncio.create_task(dp.feed_update(bot, update))
+    task = asyncio.create_task(dp.feed_update(bot, update))
+    _active_tasks.add(task)
+    task.add_done_callback(_active_tasks.discard)
 
     return web.Response(text="ok")
 
