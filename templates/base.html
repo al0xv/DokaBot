@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DocaBot Admin{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 0;
+            color: #222;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+        h1, h2, h3 {
+            margin-top: 0;
+        }
+        form {
+            margin: 0;
+        }
+        input, button {
+            padding: 10px 12px;
+            margin-top: 8px;
+            margin-bottom: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #cfd7e6;
+            border-radius: 8px;
+        }
+        button {
+            background: #2f67ff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            opacity: 0.95;
+        }
+        .messages {
+            list-style: none;
+            padding: 0;
+        }
+        .messages li {
+            background: #edf3ff;
+            border: 1px solid #cddcff;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+        .doc-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .doc-meta {
+            font-size: 14px;
+            color: #5b6578;
+        }
+        .inline-form {
+            width: auto;
+        }
+        .inline-form button {
+            width: auto;
+            margin: 0;
+            background: #d53f3f;
+            padding: 10px 16px;
+        }
+        a {
+            color: #2f67ff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>DocaBot — веб-интерфейс школы</h1>
+                <div class="doc-meta">Загрузка и управление документами для бота</div>
+            </div>
+            <div>
+                {% if user.is_authenticated %}
+                    <div class="doc-meta">Вы вошли как: <strong>{{ user.username }}</strong></div>
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Выйти</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
