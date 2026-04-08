@@ -3,11 +3,14 @@
 {% block title %}Вход{% endblock %}
 
 {% block content %}
-<h2>Вход в аккаунт школы</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Войти</button>
-</form>
-<p>Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a></p>
+<div class="login-container">
+    <div class="login-box">
+        <h2>Вход в систему</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Войти</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

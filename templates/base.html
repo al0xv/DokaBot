@@ -3,116 +3,388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DocaBot Admin{% endblock %}</title>
+    <title>{% block title %}DokaBot{% endblock %}</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f7fb;
+        * {
             margin: 0;
             padding: 0;
-            color: #222;
+            box-sizing: border-box;
         }
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            background: white;
-            padding: 24px;
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            line-height: 1.5;
         }
-        .header {
+
+        /* Top navigation bar */
+        .navbar {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 0 24px;
+            height: 56px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .navbar-user strong {
+            color: #e0e0e0;
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid #666;
+            color: #ccc;
+            padding: 6px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: #333;
+            border-color: #999;
+            color: #fff;
+        }
+
+        /* Main content area */
+        .container {
+            max-width: 960px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 16px;
             margin-bottom: 20px;
-            gap: 12px;
         }
-        h1, h2, h3 {
-            margin-top: 0;
+
+        .card-header h2,
+        .card-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin: 0;
         }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        /* Forms */
         form {
             margin: 0;
         }
-        input, button {
-            padding: 10px 12px;
-            margin-top: 8px;
-            margin-bottom: 10px;
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="file"],
+        textarea,
+        select {
             width: 100%;
-            box-sizing: border-box;
-            border: 1px solid #cfd7e6;
-            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 6px;
+            margin-bottom: 16px;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
         }
-        button {
-            background: #2f67ff;
-            color: white;
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #1a1a1a;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .helptext {
+            font-size: 12px;
+            color: #666;
+            margin-top: -12px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* Buttons */
+        button[type="submit"],
+        .btn {
+            background: #1a1a1a;
+            color: #fff;
             border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
+            transition: background 0.2s;
         }
-        button:hover {
-            opacity: 0.95;
+
+        button[type="submit"]:hover,
+        .btn:hover {
+            background: #333;
         }
+
+        button[type="submit"]:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* Messages */
         .messages {
             list-style: none;
             padding: 0;
+            margin: 0 0 24px 0;
         }
+
         .messages li {
-            background: #edf3ff;
-            border: 1px solid #cddcff;
-            padding: 10px 12px;
+            padding: 12px 16px;
             margin-bottom: 12px;
-            border-radius: 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            border-left: 4px solid;
         }
-        .doc-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 12px;
+
+        .messages li.success {
+            background: #f0f0f0;
+            border-color: #1a1a1a;
+            color: #1a1a1a;
+        }
+
+        .messages li.error {
+            background: #fff0f0;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        /* Document list */
+        .doc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .doc-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.15s;
         }
-        .doc-meta {
+
+        .doc-item:last-child {
+            border-bottom: none;
+        }
+
+        .doc-item:hover {
+            background: #fafafa;
+        }
+
+        .doc-info {
+            flex: 1;
+        }
+
+        .doc-title {
             font-size: 14px;
-            color: #5b6578;
+            font-weight: 500;
+            color: #1a1a1a;
+            margin-bottom: 4px;
         }
-        .inline-form {
-            width: auto;
+
+        .doc-meta {
+            font-size: 12px;
+            color: #666;
         }
-        .inline-form button {
-            width: auto;
-            margin: 0;
-            background: #d53f3f;
-            padding: 10px 16px;
+
+        .doc-actions {
+            display: flex;
+            gap: 8px;
         }
+
+        /* Links */
         a {
-            color: #2f67ff;
+            color: #1a1a1a;
             text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: #555;
+            text-decoration: underline;
+        }
+
+        /* Login page */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 56px);
+            padding: 24px;
+        }
+
+        .login-box {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #666;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        /* Divider */
+        hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 24px 0;
+        }
+
+        /* Utility */
+        .text-muted {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mt-3 {
+            margin-top: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .container {
+                padding: 0 16px;
+                margin: 24px auto;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .doc-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .doc-actions {
+                width: 100%;
+            }
+
+            .doc-actions button {
+                flex: 1;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1>DocaBot — веб-интерфейс школы</h1>
-                <div class="doc-meta">Загрузка и управление документами для бота</div>
-            </div>
-            <div>
-                {% if user.is_authenticated %}
-                    <div class="doc-meta">Вы вошли как: <strong>{{ user.username }}</strong></div>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit">Выйти</button>
-                    </form>
-                {% endif %}
-            </div>
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <div class="navbar-brand">DokaBot</div>
+        <div class="navbar-user">
+            <span>Вы вошли как: <strong>{{ user.username }}</strong></span>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Выйти</button>
+            </form>
         </div>
+    </nav>
+    {% endif %}
 
+    <div class="container">
         {% if messages %}
             <ul class="messages">
                 {% for message in messages %}
-                    <li>{{ message }}</li>
+                    <li class="{{ message.tags }}">{{ message }}</li>
                 {% endfor %}
             </ul>
         {% endif %}

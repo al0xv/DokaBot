@@ -1,30 +1,12 @@
 from django.contrib import messages
-from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from openai import OpenAIError
 
-from .forms import DocumentForm, SchoolRegisterForm
+from .forms import DocumentForm
 from .models import Document
 from .services import remove_document_from_vector_store, sync_document_to_vector_store
-
-
-def register_view(request: HttpRequest) -> HttpResponse:
-    if request.user.is_authenticated:
-        return redirect('upload_documents')
-
-    if request.method == 'POST':
-        form = SchoolRegisterForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, 'Аккаунт школы создан.')
-            return redirect('upload_documents')
-    else:
-        form = SchoolRegisterForm()
-
-    return render(request, 'registration/register.html', {'form': form})
 
 
 @login_required
@@ -36,8 +18,7 @@ def upload_documents_view(request: HttpRequest) -> HttpResponse:
             document.school = request.user
             document.save()
             try:
-                document.vector_store_file_id = sync_document_to_vector_store(document)
-                document.save(update_fields=['vector_store_file_id'])
+                sync_document_to_vector_store(document)
             except (OSError, RuntimeError, OpenAIError) as exc:
                 document.file.delete(save=False)
                 document.delete()

@@ -3,33 +3,45 @@
 {% block title %}Документы{% endblock %}
 
 {% block content %}
-<h2>Загрузка документов</h2>
-<p>Каждая школа видит и может редактировать только свои файлы.</p>
+<div class="card">
+    <div class="card-header">
+        <h2>Загрузка документа</h2>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Загрузить документ</button>
+    </form>
+</div>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Загрузить документ</button>
-</form>
-
-<hr style="margin: 24px 0; border: none; border-top: 1px solid #e5e7eb;">
-
-<h3>Мои документы</h3>
-{% if documents %}
-    {% for document in documents %}
-        <div class="doc-card">
-            <div>
-                <strong>{{ document.title }}</strong>
-                <div class="doc-meta">Загружен: {{ document.uploaded_at|date:"d.m.Y H:i" }}</div>
-                <div class="doc-meta"><a href="{{ document.file.url }}" target="_blank">Открыть файл</a></div>
-            </div>
-            <form method="post" action="{% url 'delete_document' document.id %}" class="inline-form">
-                {% csrf_token %}
-                <button type="submit">Удалить</button>
-            </form>
+<div class="card">
+    <div class="card-header">
+        <h3>Мои документы</h3>
+    </div>
+    {% if documents %}
+        <ul class="doc-list">
+            {% for document in documents %}
+                <li class="doc-item">
+                    <div class="doc-info">
+                        <div class="doc-title">{{ document.title }}</div>
+                        <div class="doc-meta">
+                            Загружен: {{ document.uploaded_at|date:"d.m.Y H:i" }}
+                            · <a href="{{ document.file.url }}" target="_blank">Открыть файл</a>
+                        </div>
+                    </div>
+                    <div class="doc-actions">
+                        <form method="post" action="{% url 'delete_document' document.id %}" class="inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            <p>Документы пока не загружены.</p>
         </div>
-    {% endfor %}
-{% else %}
-    <p>Документы пока не загружены.</p>
-{% endif %}
+    {% endif %}
+</div>
 {% endblock %}
