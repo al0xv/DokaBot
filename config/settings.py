@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / '.env', override=True)
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY or SECRET_KEY == 'change-me-in-production':
@@ -38,8 +38,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# Замените project.urls на имя вашей проектной папки, если она называется иначе
-ROOT_URLCONF = 'project.urls'
+# Замените config.urls на имя вашей проектной папки, если она называется иначе
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -56,10 +56,10 @@ TEMPLATES = [
     },
 ]
 
-# Замените project.wsgi.application на имя вашей проектной папки, если она называется иначе
-WSGI_APPLICATION = 'project.wsgi.application'
-# Замените project.asgi.application на имя вашей проектной папки, если она называется иначе
-ASGI_APPLICATION = 'project.asgi.application'
+# Замените config.wsgi.application на имя вашей проектной папки, если она называется иначе
+WSGI_APPLICATION = 'config.wsgi.application'
+# Замените config.asgi.application на имя вашей проектной папки, если она называется иначе
+ASGI_APPLICATION = 'config.asgi.application'
 
 DATABASES = {
     'default': {
